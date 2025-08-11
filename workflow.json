@@ -1,0 +1,646 @@
+{
+  "name": "Deal Update",
+  "nodes": [
+    {
+      "parameters": {
+        "entity": "=deal"
+      },
+      "type": "n8n-nodes-base.pipedriveTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        16,
+        -480
+      ],
+      "id": "b8af9604-6c61-4626-bf6c-16822a92257b",
+      "name": "Pipedrive Trigger",
+      "webhookId": "121ae195-b753-4ee7-97a5-80510d19998b",
+      "credentials": {
+        "pipedriveApi": {
+          "id": "SK5W4uMv0uUmFWGn",
+          "name": "Pipedrive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dealId": "={{$json.data?.id \n        ? $json.data.id \n        : $json.previous?.id\n}}\n\n"
+      },
+      "type": "n8n-nodes-base.pipedrive",
+      "typeVersion": 1,
+      "position": [
+        160,
+        -256
+      ],
+      "id": "76237df8-7d29-421b-ae1c-0ff4d589cf99",
+      "name": "Get a deal",
+      "credentials": {
+        "pipedriveApi": {
+          "id": "SK5W4uMv0uUmFWGn",
+          "name": "Pipedrive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "C098R3GPPT4"
+        },
+        "text": "=*{{ $('Code').item.json.slackHeader }}*\n💼 *Deal:* {{$node[\"Get a deal\"].json.title}}  \n👤 *Contact:* {{$node[\"Get a deal\"].json.person_id.name}}  \n📧 *Email:* {{$node[\"Get a deal\"].json.person_id.email[0].value}}  \n📈 *Stage:* {{$node[\"Get a deal\"].json.stage_id}}\n",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        128,
+        96
+      ],
+      "id": "f89b1ab5-c0b7-488f-8c4c-78ba40147adf",
+      "name": "Send a message",
+      "webhookId": "e4660fb5-d790-4990-9bb9-8520e2d2d25e",
+      "credentials": {
+        "slackApi": {
+          "id": "TxGTlTAvHsD0IURU",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.all();\nconst output = [];\n\nfor (const item of input) {\n  const action = item.json.meta?.action || \"unknown\";\n\n  let slackHeader = \"\";\n  if (action === \"delete\") {\n    slackHeader = \"🗑️ Deal Deleted!\";\n  } else if (action === \"create\") {\n    slackHeader = \"🚀 Deal Created!\";\n  } else {\n    slackHeader = \"🔄 Deal Updated!\";\n  }\n\n  item.json.actionType = action;\n  item.json.slackHeader = slackHeader;\n\n  output.push(item);\n}\n\nreturn output;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        288,
+        -480
+      ],
+      "id": "75a9882d-8b94-4468-83cd-81548e10d3cd",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "entity": "activity"
+      },
+      "type": "n8n-nodes-base.pipedriveTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        560,
+        -512
+      ],
+      "id": "b0adc6a8-1018-419e-8534-23a694a30def",
+      "name": "Pipedrive Trigger2",
+      "webhookId": "2e335799-3a39-40a8-b941-cd76f678565b",
+      "credentials": {
+        "pipedriveApi": {
+          "id": "SK5W4uMv0uUmFWGn",
+          "name": "Pipedrive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "activity",
+        "operation": "get",
+        "activityId": "={{ $json.data.id }}"
+      },
+      "type": "n8n-nodes-base.pipedrive",
+      "typeVersion": 1,
+      "position": [
+        576,
+        -288
+      ],
+      "id": "d42a6719-97c3-4f96-8e1c-ccefe2c97189",
+      "name": "Get an activity",
+      "credentials": {
+        "pipedriveApi": {
+          "id": "SK5W4uMv0uUmFWGn",
+          "name": "Pipedrive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dealId": "={{ $json.deal_id }}"
+      },
+      "type": "n8n-nodes-base.pipedrive",
+      "typeVersion": 1,
+      "position": [
+        848,
+        -288
+      ],
+      "id": "b15c908c-8b84-4dda-ac46-bd751b89530e",
+      "name": "Get a deal1",
+      "credentials": {
+        "pipedriveApi": {
+          "id": "SK5W4uMv0uUmFWGn",
+          "name": "Pipedrive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C098R3GPPT4",
+          "mode": "list",
+          "cachedResultName": "social"
+        },
+        "text": "=*{{ $(\"Code1\").item.json.slackHeader }}*\n\n:calendar: *Subject:* {{ $(\"Get an activity\").item.json.subject }}\n:alarm_clock: *Due:* {{ $(\"Get an activity\").item.json.due_date }} at {{ $(\"Get an activity\").item.json.due_time }}\n:pencil: *Type:* {{ $(\"Get an activity\").item.json.type }}\n:speech_balloon: *Note:* {{ $(\"Get an activity\").item.json.note }}\n\n:briefcase: *Deal:* {{ $(\"Get a deal1\").item.json.title }}\n:bust_in_silhouette: *Contact:* {{ $(\"Get a deal1\").item.json.person_id.name }}\n:e-mail: *Email:* {{ $(\"Get a deal1\").item.json.person_id.email[0].value }}\n:chart_with_upwards_trend: *Stage:* {{ $(\"Get a deal1\").item.json.stage_id }}\n\n:link: *Deal Link:* [Open Deal](https://psychedeliac-sandbox.pipedrive.com/deal/{{ $(\"Get a deal1\").item.json.id }})\n\n⚙️ *Change Type:* `{{ $(\"Code1\").item.json.activityChangeType }}`\n\n{{ $json.content.parts[0].text }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        704,
+        96
+      ],
+      "id": "ee01b9c5-e91b-4d0b-b0a4-8d267457ed95",
+      "name": "Send a message2",
+      "webhookId": "d141d985-d4ae-46d9-a9d7-716244782aba",
+      "credentials": {
+        "slackApi": {
+          "id": "TxGTlTAvHsD0IURU",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.all();\nconst output = [];\n\nfor (const item of input) {\n  const meta = item.json.meta || {};\n  const action = meta.action;\n  const entity = meta.entity;\n\n  let changeType = \"updated\"; // default fallback\n\n  if (entity === \"activity\") {\n    if (action === \"create\") {\n      changeType = \"created\";\n    } else if (action === \"change\") {\n      const prev = item.json.previous || {};\n      const curr = item.json.data || {};\n\n      // Use optional chaining and null checks to avoid runtime errors\n      const wasCompleted = prev.done === false && curr.done === true;\n      const wasRescheduled = prev.due_date && curr.due_date && prev.due_date !== curr.due_date;\n      const wasReassigned = prev.owner_id && curr.owner_id && prev.owner_id !== curr.owner_id;\n\n      if (wasCompleted) {\n        changeType = \"completed\";\n      } else if (wasRescheduled) {\n        changeType = \"rescheduled\";\n      } else if (wasReassigned) {\n        changeType = \"reassigned\";\n      } else {\n        changeType = \"modified\";\n      }\n    }\n  }\n\n  item.json.activityChangeType = changeType;\n\n  // Add optional Slack header for consistent use in message\n  item.json.slackHeader = `📞 Activity ${changeType.charAt(0).toUpperCase() + changeType.slice(1)}!`;\n\n  output.push(item);\n}\n\nreturn output;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        832,
+        -512
+      ],
+      "id": "ed9afb20-e93b-4fc7-9180-eb6fae85a562",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-1.5-flash-latest",
+          "mode": "list",
+          "cachedResultName": "models/gemini-1.5-flash-latest"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=*{{ $(\"Code1\").item.json.slackHeader }}*\n\n:calendar: *Subject:* {{ $(\"Get an activity\").item.json.subject }}\n:bust_in_silhouette: *Assigned To:* {{ $json.next_activity.assigned_to_user_id}}\n:alarm_clock: *Due:* {{ $(\"Get an activity\").item.json.due_date }} at {{ $(\"Get an activity\").item.json.due_time }}\n:hourglass_flowing_sand: *Duration:* {{ $(\"Get an activity\").item.json.duration }}\n:pencil: *Type:* {{ $(\"Get an activity\").item.json.type }}\n:speech_balloon: *Note:* {{ $(\"Get an activity\").item.json.note }}\n\n:briefcase: *Deal:* {{ $(\"Get a deal1\").item.json.title }}\n:bust_in_silhouette: *Contact:* {{ $(\"Get a deal1\").item.json.person_id.name }}\n:e-mail: *Email:* {{ $(\"Get a deal1\").item.json.person_id.email[0].value }}\n:chart_with_upwards_trend: *Stage:* {{ $(\"Get a deal1\").item.json.stage_id }}\n\n:link: *Deal Link:* [Open Deal](https://psychedeliac-sandbox.pipedrive.com/deal/{{ $(\"Get a deal1\").item.json.id }})\n\n⚙️ *Change Type:* `{{ $(\"Code1\").item.json.activityChangeType }}`\n1. write a summary for the above message.\n2. don't use double asterisks, use single asterisks.",
+              "role": "model"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        640,
+        -80
+      ],
+      "id": "3f522a95-9c2e-490f-b017-0a58115caff9",
+      "name": "Message a model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "EgOK2cRvY7lZq3yE",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-1.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-1.5-flash"
+        },
+        "messages": {
+          "values": [
+            {}
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        64,
+        -64
+      ],
+      "id": "40bb5b91-90a3-4572-9be3-562a13b25896",
+      "name": "Message a model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "EgOK2cRvY7lZq3yE",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Get a deal1": [
+      {
+        "json": {
+          "id": 26,
+          "creator_user_id": {
+            "id": 25769267,
+            "name": "Wasay",
+            "email": "wasay.ahmad123@gmail.com",
+            "has_pic": 0,
+            "pic_hash": null,
+            "active_flag": true,
+            "value": 25769267
+          },
+          "user_id": {
+            "id": 25769267,
+            "name": "Wasay",
+            "email": "wasay.ahmad123@gmail.com",
+            "has_pic": 0,
+            "pic_hash": null,
+            "active_flag": true,
+            "value": 25769267
+          },
+          "person_id": {
+            "active_flag": true,
+            "name": "pikachu",
+            "email": [
+              {
+                "label": "work",
+                "value": "pikachu@pokemon.com",
+                "primary": true
+              }
+            ],
+            "phone": [
+              {
+                "value": "",
+                "primary": true
+              }
+            ],
+            "owner_id": 25769267,
+            "company_id": 15558732,
+            "value": 25
+          },
+          "org_id": null,
+          "stage_id": 1,
+          "title": "pikachu deal",
+          "value": 0,
+          "currency": "USD",
+          "add_time": "2025-08-04 15:57:35",
+          "update_time": "2025-08-04 16:36:50",
+          "stage_change_time": null,
+          "active": true,
+          "deleted": false,
+          "status": "open",
+          "probability": null,
+          "next_activity_date": "2025-08-04",
+          "next_activity_time": "17:00:00",
+          "next_activity_id": 35,
+          "last_activity_id": 34,
+          "last_activity_date": "2025-08-04",
+          "lost_reason": null,
+          "visible_to": "3",
+          "close_time": null,
+          "pipeline_id": 1,
+          "won_time": null,
+          "first_won_time": null,
+          "lost_time": null,
+          "products_count": 0,
+          "files_count": 0,
+          "notes_count": 1,
+          "followers_count": 1,
+          "email_messages_count": 0,
+          "activities_count": 5,
+          "done_activities_count": 4,
+          "undone_activities_count": 1,
+          "participants_count": 1,
+          "expected_close_date": null,
+          "last_incoming_mail_time": null,
+          "last_outgoing_mail_time": null,
+          "label": null,
+          "local_won_date": null,
+          "local_lost_date": null,
+          "local_close_date": null,
+          "origin": "ManuallyCreated",
+          "origin_id": null,
+          "channel": null,
+          "channel_id": null,
+          "is_archived": false,
+          "archive_time": null,
+          "sequence_enrollment": null,
+          "stage_order_nr": 0,
+          "person_name": "pikachu",
+          "org_name": null,
+          "next_activity_subject": "hoenn visit",
+          "next_activity_type": "call",
+          "next_activity_duration": "00:45:00",
+          "next_activity_note": "let's connect",
+          "formatted_value": "$0",
+          "weighted_value": 0,
+          "formatted_weighted_value": "$0",
+          "weighted_value_currency": "USD",
+          "rotten_time": null,
+          "owner_name": "Wasay",
+          "cc_email": "psychedeliac-sandbox+deal26@pipedrivemail.com",
+          "org_hidden": false,
+          "person_hidden": false,
+          "average_time_to_won": {
+            "y": 0,
+            "m": 0,
+            "d": 0,
+            "h": 0,
+            "i": 0,
+            "s": 0,
+            "total_seconds": 0
+          },
+          "average_stage_progress": 0,
+          "age": {
+            "y": 0,
+            "m": 0,
+            "d": 0,
+            "h": 0,
+            "i": 39,
+            "s": 22,
+            "total_seconds": 2362
+          },
+          "stay_in_pipeline_stages": {
+            "times_in_stages": {
+              "1": 2362
+            },
+            "order_of_stages": [
+              1
+            ]
+          },
+          "last_activity": {
+            "id": 34,
+            "user_id": 25769267,
+            "done": true,
+            "type": "call",
+            "reference_type": null,
+            "reference_id": null,
+            "conference_meeting_client": null,
+            "conference_meeting_url": null,
+            "due_date": "2025-08-04",
+            "due_time": "",
+            "duration": "",
+            "busy_flag": false,
+            "add_time": "2025-08-04 16:25:28",
+            "marked_as_done_time": "2025-08-04 16:29:24",
+            "last_notification_time": null,
+            "last_notification_user_id": null,
+            "notification_language_id": null,
+            "subject": "kalos visit",
+            "public_description": "",
+            "calendar_sync_include_context": null,
+            "location": null,
+            "org_id": null,
+            "person_id": 25,
+            "deal_id": 26,
+            "lead_id": null,
+            "project_id": null,
+            "active_flag": true,
+            "update_time": "2025-08-04 16:29:24",
+            "update_user_id": 25769267,
+            "source_timezone": null,
+            "rec_rule": null,
+            "rec_rule_extension": null,
+            "rec_master_activity_id": null,
+            "conference_meeting_id": null,
+            "original_start_time": null,
+            "private": false,
+            "priority": null,
+            "note": null,
+            "created_by_user_id": 25769267,
+            "location_subpremise": null,
+            "location_street_number": null,
+            "location_route": null,
+            "location_sublocality": null,
+            "location_locality": null,
+            "location_admin_area_level_1": null,
+            "location_admin_area_level_2": null,
+            "location_country": null,
+            "location_postal_code": null,
+            "location_formatted_address": null,
+            "attendees": null,
+            "participants": [
+              {
+                "person_id": 25,
+                "primary_flag": true
+              }
+            ],
+            "series": null,
+            "is_recurring": null,
+            "org_name": null,
+            "person_name": "pikachu",
+            "deal_title": "pikachu deal",
+            "lead_title": null,
+            "project_title": null,
+            "owner_name": "Wasay",
+            "person_dropbox_bcc": "psychedeliac-sandbox@pipedrivemail.com",
+            "deal_dropbox_bcc": "psychedeliac-sandbox+deal26@pipedrivemail.com",
+            "assigned_to_user_id": 25769267,
+            "type_name": "Call",
+            "lead": null
+          },
+          "next_activity": {
+            "id": 35,
+            "user_id": 25769267,
+            "done": false,
+            "type": "call",
+            "reference_type": null,
+            "reference_id": null,
+            "conference_meeting_client": null,
+            "conference_meeting_url": null,
+            "due_date": "2025-08-04",
+            "due_time": "17:00",
+            "duration": "00:45",
+            "busy_flag": true,
+            "add_time": "2025-08-04 16:36:50",
+            "marked_as_done_time": "",
+            "last_notification_time": null,
+            "last_notification_user_id": null,
+            "notification_language_id": null,
+            "subject": "hoenn visit",
+            "public_description": "",
+            "calendar_sync_include_context": null,
+            "location": null,
+            "org_id": 3,
+            "person_id": 25,
+            "deal_id": 26,
+            "lead_id": null,
+            "project_id": null,
+            "active_flag": true,
+            "update_time": "2025-08-04 16:36:50",
+            "update_user_id": null,
+            "source_timezone": null,
+            "rec_rule": null,
+            "rec_rule_extension": null,
+            "rec_master_activity_id": null,
+            "conference_meeting_id": null,
+            "original_start_time": null,
+            "private": false,
+            "priority": null,
+            "note": "let's connect",
+            "created_by_user_id": 25769267,
+            "location_subpremise": null,
+            "location_street_number": null,
+            "location_route": null,
+            "location_sublocality": null,
+            "location_locality": null,
+            "location_admin_area_level_1": null,
+            "location_admin_area_level_2": null,
+            "location_country": null,
+            "location_postal_code": null,
+            "location_formatted_address": null,
+            "attendees": null,
+            "participants": [
+              {
+                "person_id": 25,
+                "primary_flag": true
+              }
+            ],
+            "series": null,
+            "is_recurring": null,
+            "org_name": "Pokemon",
+            "person_name": "pikachu",
+            "deal_title": "pikachu deal",
+            "lead_title": null,
+            "project_title": null,
+            "owner_name": "Wasay",
+            "person_dropbox_bcc": "psychedeliac-sandbox@pipedrivemail.com",
+            "deal_dropbox_bcc": "psychedeliac-sandbox+deal26@pipedrivemail.com",
+            "assigned_to_user_id": 25769267,
+            "type_name": "Call",
+            "lead": null
+          }
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Pipedrive Trigger": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a deal": {
+      "main": [
+        [
+          {
+            "node": "Message a model1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        []
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Get a deal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pipedrive Trigger2": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get an activity": {
+      "main": [
+        [
+          {
+            "node": "Get a deal1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a deal1": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Get an activity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Send a message2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model1": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "70607c0e-90f7-4e0a-9436-2ad74fecfd88",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "1662d6426f558c2d23a9a09cb96bb401cdd8b9148b040d7db1ea3f3435f7453c"
+  },
+  "id": "cin7aB83P9DRAw9Z",
+  "tags": []
+}
